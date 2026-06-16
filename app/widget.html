@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nessteams · Pricing Simulator</title>
+<link rel="icon" type="image/png" href="favicon.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Yanone+Kaffeesatz:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://live.zwidgets.com/js-sdk/1.2/ZohoEmbededAppSDK.min.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:    #0E0E0C;
+    --bone:   #F4EFE6;
+    --terra:  #D4603A;
+    --jungle: #1F3D2E;
+    --sand:   #E8DFD0;
+
+    --ink-60: rgba(14,14,12,0.6);
+    --ink-30: rgba(14,14,12,0.3);
+    --ink-12: rgba(14,14,12,0.12);
+    --bone-40: rgba(244,239,230,0.4);
+
+    --font-display: 'Yanone Kaffeesatz', sans-serif;
+    --font-heading: 'Playfair Display', serif;
+    --font-body:    'DM Sans', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+
+    --radius-sm: 3px;
+    --radius-md: 5px;
+    --radius-lg: 8px;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bone);
+    color: var(--ink);
+    margin: 0;
+    padding: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Nav ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--jungle);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: var(--terra);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-text-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .logo-wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bone);
+    line-height: 1;
+  }
+
+  .logo-tagline {
+    font-family: var(--font-mono);
+    font-size: 7px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--terra);
+    line-height: 1;
+  }
+
+  /* ── CRM status ── */
+  #crm-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    background: var(--sand);
+    border-bottom: 1px solid var(--ink-12);
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--ink-30);
+    flex-shrink: 0;
+  }
+  .status-dot.connected { background: var(--jungle); }
+  .status-dot.error     { background: var(--terra); }
+
+  .inner { padding: 16px 16px 32px; }
+
+  /* ── Save button ── */
+  .btn-save {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--terra);
+    color: #fff;
+    font-size: 12px;
+    font-family: var(--font-body);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-save:hover  { opacity: 0.88; }
+  .btn-save:active { transform: scale(0.98); }
+  .btn-save.saving { opacity: 0.6; pointer-events: none; }
+  .btn-save.saved  { background: var(--jungle); }
+
+  /* ── Step label (eyebrow) ── */
+  .step-label {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: var(--terra);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step-label::after {
+    content: '';
+    display: block;
+    flex: 1;
+    height: 1px;
+    background: var(--terra);
+    opacity: 0.3;
+  }
+
+  /* ── Seniority buttons ── */
+  .seniority-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .btn-tier {
+    flex: 1;
+    min-width: 56px;
+    padding: 9px 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--ink-30);
+    background: transparent;
+    color: var(--ink-60);
+    font-size: 12px;
+    font-family: var(--font-body);
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .btn-tier:hover { border-color: var(--ink); color: var(--ink); }
+  .btn-tier.active {
+    border-color: var(--terra);
+    background: var(--terra);
+    color: #fff;
+    font-weight: 500;
+  }
+  /* Inside the board column the tiers stack vertically, full-width */
+  .board .seniority-row {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-bottom: 0;
+  }
+  .board .seniority-row .btn-tier {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+    padding-left: 12px;
+  }
+
+  /* ── Working board — stacks on narrow, 4 columns in landscape ── */
+  .board {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 22px;
+    align-items: start;
+  }
+  .board-col { display: flex; flex-direction: column; min-width: 0; }
+  .board-col .step-label,
+  .board-col .client-prices-divider { margin-bottom: 10px; }
+
+  /* Landscape / wide viewports (e.g. the 1615×400 wizard panel) — lay the four
+     working areas side by side and compact the vertical rhythm so the whole
+     simulator fits in ~400px tall without scrolling. */
+  @media (min-width: 760px) {
+    /* compact chrome */
+    nav { padding: 7px 20px; }
+    .logo-mark { width: 30px; height: 30px; }
+    .logo-wordmark { font-size: 18px; }
+    #crm-status { padding: 4px 20px; }
+    .inner { padding: 12px 20px 14px; }
+
+    /* seniority · role lookup · salary · prices */
+    .board {
+      grid-template-columns: minmax(150px,0.78fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+      gap: 18px;
+      margin-bottom: 0;
+    }
+    .board-col .step-label,
+    .board-col .client-prices-divider { margin-bottom: 8px; }
+
+    /* tighten salary controls so 3 sliders + 2 price cards stay under 400px */
+    .salary-controls { gap: 12px; padding: 12px 14px; }
+    .control-group { gap: 6px; }
+    .salary-display { font-size: 19px; }
+
+    /* both price cards stacked within their (narrower) column */
+    .result-col { flex-direction: column; gap: 8px; }
+    .price-card { padding: 11px 13px; }
+    .price-card-label  { margin-bottom: 3px; }
+    .price-card-value  { font-size: 22px; margin-bottom: 4px; }
+    .price-formula     { margin-bottom: 6px; }
+
+    .cheatsheet-card { padding: 12px 14px; gap: 8px; }
+  }
+
+  /* ── Salary controls (left) ── */
+  .salary-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 14px;
+    background: var(--sand);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--ink-12);
+  }
+  .control-group { display: flex; flex-direction: column; gap: 8px; }
+  .control-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+  }
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    accent-color: var(--terra);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sec-strong);
+    cursor: pointer;
+    margin-top: -6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+  input[type=range]::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--sec-strong);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+  .salary-display {
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  /* ── Result section (right) ── */
+  .client-prices-divider {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.24em;
+    color: var(--terra);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .client-prices-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--terra);
+    opacity: 0.3;
+  }
+  .result-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .price-card {
+    background: var(--sand);
+    border: 1px solid var(--ink-12);
+    border-left: 3px solid var(--terra);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+  }
+  .price-card-label {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .price-card-value {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--jungle);
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .price-formula {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-60);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 8px;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+  }
+  .price-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .margin-pct {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--terra);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Tags ── */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .pill-cap   { background: rgba(212,96,58,0.12);  color: var(--terra); }
+  .pill-pct   { background: rgba(31,61,46,0.10);   color: var(--jungle); }
+  .pill-tie   { background: var(--ink-12);          color: var(--ink-60); }
+  .pill-floor { background: rgba(31,61,46,0.10);   color: var(--jungle); }
+
+
+  /* ── Salary Cheat Sheet ── */
+  .cheatsheet-card {
+    background: var(--sand);
+    border: 1px solid rgba(14,14,12,0.10);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cs-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+  }
+  .cs-top-roles { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cs-role-pill {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(14,14,12,0.18);
+    background: var(--bone);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+  }
+  .cs-role-pill:hover,
+  .cs-role-pill.active {
+    border-color: var(--terra);
+    background: rgba(212,96,58,0.08);
+    color: var(--terra);
+  }
+  .cs-search-wrap { position: relative; }
+  #cs-search {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    padding: 7px 10px;
+    border: 1.5px solid rgba(14,14,12,0.15);
+    border-radius: 6px;
+    background: var(--bone);
+    color: var(--ink);
+    box-sizing: border-box;
+  }
+  #cs-search:focus { outline: none; border-color: var(--terra); }
+  .cs-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--bone);
+    border: 1px solid rgba(14,14,12,0.15);
+    border-radius: 6px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 50;
+    box-shadow: 0 4px 16px rgba(14,14,12,0.10);
+  }
+  .cs-dropdown-item {
+    padding: 8px 12px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .cs-dropdown-item:hover { background: rgba(212,96,58,0.08); color: var(--terra); }
+  .cs-result {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .cs-role-name {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .cs-salary-range {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--terra);
+    font-weight: 600;
+  }
+  .cs-apply-btn {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    padding: 4px 14px;
+    border-radius: 6px;
+    border: 1.5px solid var(--terra);
+    background: transparent;
+    color: var(--terra);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .cs-apply-btn:hover { background: rgba(212,96,58,0.10); }
+  .cs-warning {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: #B45309;
+    background: rgba(180,83,9,0.06);
+    border: 1px solid rgba(180,83,9,0.20);
+    border-radius: 6px;
+    padding: 6px 10px;
+  }
+  .cs-status {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-60);
+    min-height: 14px;
+  }
+
+  /* ── Responsive — mobile ── */
+  @media (max-width: 520px) {
+
+    body { font-size: 14px; }
+
+    /* Result cards go side-by-side while the board is single-column */
+    .result-col {
+      flex-direction: row;
+    }
+    .price-card {
+      flex: 1;
+      min-width: 0;
+    }
+    .price-card-value  { font-size: 22px; }
+    .salary-display    { font-size: 22px; }
+    .price-card-label  { font-size: 16px; }
+
+    /* Apple-style pill sliders — thick fill, no visible thumb */
+    input[type=range] {
+      height: 44px;
+      border-radius: 999px;
+      background: rgba(14,14,12,0.10); /* JS will override with gradient fill */
+    }
+    /* WebKit: transparent track so the input's gradient fill shows through */
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 44px;
+      border-radius: 999px;
+      background: transparent;
+    }
+    /* WebKit: invisible thumb — still acts as drag handle */
+    input[type=range]::-webkit-slider-thumb {
+      width: 6px;
+      height: 44px;
+      border-radius: 3px;
+      background: transparent;
+      margin-top: 0;
+      box-shadow: none;
+    }
+    /* Firefox: native progress fill */
+    input[type=range]::-moz-range-track {
+      height: 44px;
+      border-radius: 999px;
+      background: rgba(14,14,12,0.10);
+    }
+    input[type=range]::-moz-range-progress {
+      height: 44px;
+      border-radius: 999px 0 0 999px;
+      background: #D4603A;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 6px;
+      height: 44px;
+      border-radius: 3px;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
+    /* Tighter seniority buttons */
+    .btn-tier {
+      font-size: 12px;
+      padding: 8px 4px;
+      min-width: 48px;
+    }
+
+    /* Compact nav */
+    .btn-save { padding: 7px 12px; font-size: 12px; }
+  }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--jungle);
+    color: var(--bone);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: transform 0.2s ease;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  #toast.error { background: var(--terra); }
+  #toast.show  { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo-wrap">
+    <!-- N-Mark: on jungle bg → terracotta container, bone vertical strokes, ink diagonal -->
+    <div class="logo-mark">
+      <svg width="22" height="22" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+        <line x1="9" y1="28" x2="9" y2="8" stroke="#F4EFE6" stroke-width="5.5" stroke-linecap="round"/>
+        <line x1="9" y1="8" x2="27" y2="28" stroke="#0E0E0C" stroke-width="5.5" stroke-linecap="round"/>
+        <line x1="27" y1="28" x2="27" y2="8" stroke="#F4EFE6" stroke-width="5.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="logo-text-wrap">
+      <div class="logo-wordmark">Nessteams</div>
+      <div class="logo-tagline">Pricing Simulator</div>
+    </div>
+  </div>
+  <button class="btn-save" id="btn-save" onclick="saveToCRM()">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V5l-3-3z"/>
+      <path d="M11 2v4H5V2M5 9h6M5 12h4"/>
+    </svg>
+    Save to Deal
+  </button>
+</nav>
+
+<div id="crm-status">
+  <div class="status-dot" id="status-dot"></div>
+  <span id="status-text">Manual Mode</span>
+</div>
+
+<div class="inner">
+
+  <!-- Working board — stacks on narrow screens, 4 columns in landscape -->
+  <div class="board">
+
+    <!-- Column 1 — Seniority -->
+    <div class="board-col">
+      <div class="step-label">01 — Seniority</div>
+      <div class="seniority-row">
+        <button class="btn-tier"        data-tier="entry"    onclick="setActiveTier('entry')">Entry</button>
+        <button class="btn-tier"        data-tier="junior"   onclick="setActiveTier('junior')">Junior</button>
+        <button class="btn-tier active" data-tier="mid"      onclick="setActiveTier('mid')">Mid-level</button>
+        <button class="btn-tier"        data-tier="senior"   onclick="setActiveTier('senior')">Senior</button>
+        <button class="btn-tier"        data-tier="teamlead" onclick="setActiveTier('teamlead')">Team Lead</button>
+      </div>
+    </div>
+
+    <!-- Column 2 — Role lookup -->
+    <div class="board-col">
+      <div class="step-label">02 — Role lookup</div>
+      <div class="cheatsheet-card" id="cheatsheet-card">
+        <div class="cs-label">Commonly hired for</div>
+        <div class="cs-top-roles" id="cs-top-roles"></div>
+        <div class="cs-search-wrap">
+          <input type="text" id="cs-search" placeholder="Search all roles…" autocomplete="off"/>
+          <div class="cs-dropdown" id="cs-dropdown" hidden></div>
+        </div>
+        <div class="cs-result" id="cs-result" hidden>
+          <span class="cs-role-name" id="cs-role-name"></span>
+          <span class="cs-salary-range" id="cs-salary-range"></span>
+          <button class="cs-apply-btn" id="cs-apply-btn">Apply to sliders</button>
+        </div>
+        <div class="cs-warning" id="cs-warning" hidden>
+          ⚠ Not enough data for this role — enter manually
+        </div>
+        <div class="cs-status" id="cs-status"></div>
+      </div>
+    </div>
+
+    <!-- Column 3 — Salary range -->
+    <div class="board-col">
+      <div class="step-label">03 — Salary range</div>
+      <div class="salary-controls">
+        <div class="control-group">
+          <div class="control-label">Salary — low end</div>
+          <span class="salary-display" id="disp-low">$1,500</span>
+          <input type="range" id="sl-low" min="300" max="15000" step="50" value="1500">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Salary — high end</div>
+          <span class="salary-display" id="disp-high">$2,500</span>
+          <input type="range" id="sl-high" min="300" max="15000" step="50" value="2500">
+        </div>
+        <div class="control-group">
+          <div class="control-label">Target margin</div>
+          <span class="salary-display" id="disp-margin">$1,000</span>
+          <input type="range" id="sl-margin" min="200" max="8000" step="100" value="1000">
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 4 — Client prices -->
+    <div class="board-col">
+      <div class="client-prices-divider">Client Prices</div>
+      <div class="result-col" id="result-col"></div>
+    </div>
+
+  </div>
+
+
+</div>
+
+<div id="toast">Saved to Deal record</div>
+
+<script>
+/* ─── Constants ─── */
+const MULT = 1.25;
+
+const TIER_DEFAULTS = {
+  entry:    [800,  1000],
+  junior:   [1000, 1500],
+  mid:      [1500, 2500],
+  senior:   [2500, 4000],
+  teamlead: [3500, 6000],
+};
+
+/* Minimum margin (in $) per seniority level — the effective margin used in the
+   price formula is never allowed below this floor (see calcPrice / TIER_FLOORS
+   usage). Each tier keeps its own entry on purpose so per-tier floors can be
+   reintroduced later: just change the value back per tier. For now ALL tiers
+   share a flat 1000 floor by business decision (2026-06-16). Previous values
+   were: entry 1000, junior 1200, mid 1500, senior 1800, teamlead 2000. */
+const TIER_FLOORS = {
+  entry:    1000,
+  junior:   1000,
+  mid:      1000,
+  senior:   1000,
+  teamlead: 1000,
+};
+
+const SENIORITY_API_MAP = {
+  'Entry Level': 'entry', 'Junior': 'junior', 'Mid-level': 'mid',
+  'Senior': 'senior', 'Team Lead': 'teamlead',
+};
+
+/* Reverse map — tier key → CRM label (used for cheat sheet filtering and CRM write) */
+const TIER_LABEL = {
+  entry: 'Entry Level', junior: 'Junior', mid: 'Mid-level',
+  senior: 'Senior', teamlead: 'Team Lead',
+};
+
+const r125 = v => Math.ceil(v / 125) * 125;
+const fmt  = v => '$' + Math.round(v).toLocaleString();
+const fmtR = v => '$' + r125(v).toLocaleString();
+
+/* marginDollars is set by the slider (in $100 increments).
+   Formula: cost  = salary × MULT  (covers salary + Panama employer taxes/fees)
+            price = ceil(cost + marginDollars, 125)
+            margin% is derived from the result — not an input.               */
+let marginDollars = 1000;
+
+function calcPrice(salary, tier) {
+  var cost            = salary * MULT;
+  var floorMargin     = TIER_FLOORS[tier || activeTier] || 0;
+  var effectiveMargin = Math.max(marginDollars, floorMargin);  // margin never below tier floor
+  var price           = r125(cost + effectiveMargin);
+  var floored         = effectiveMargin > marginDollars;        // true when floor kicked in
+  return { price: price, cost: cost, margin: price - cost, floored: floored };
+}
+
+function effMarginPct(salary, tier) {
+  var p = calcPrice(salary, tier);
+  return ((p.price - p.cost) / p.price) * 100;
+}
+
+let activeTier = 'mid';
+
+/* ─── Salary Cheat Sheet state ─── */
+var csAllRows    = [];    // all SalaryCheatSheet rows (fetched once at init)
+var csActiveRow  = null;  // selected row object (includes ROWID)
+var csActiveName = null;  // selected role name string
+
+/* ─── Cheat Sheet API endpoint (Catalyst Serverless Function) ───────────────
+   The widget is bundled as a Sigma extension and served from
+   *.zohostatic.com, so this MUST be an absolute URL pointing at the
+   Catalyst-hosted function. Catalyst function must allow CORS
+   (see functions/cheatsheet-api/index.js — Access-Control-Allow-Origin: *).
+─────────────────────────────────────────────────────────────────────────── */
+var CS_API = 'https://pricing-calculator-916648406.development.catalystserverless.com/server/cheatsheet-api';
+
+/* ─── Seniority button activation ─── */
+function setActiveTier(tier, applyDefaults) {
+  activeTier = tier;
+  document.querySelectorAll('.btn-tier').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.tier === tier);
+  });
+  if (applyDefaults !== false) {
+    var d = TIER_DEFAULTS[tier];
+    setSlider('sl-low',  'num-low',  d[0]);
+    setSlider('sl-high', 'num-high', d[1]);
+  }
+  render();
+  csRefresh();   // re-filter cheat sheet for the new seniority tier
+}
+
+function setSlider(sliderId, numId, val) {
+  document.getElementById(sliderId).value = val;
+  var dispId = sliderId === 'sl-low' ? 'disp-low' : 'disp-high';
+  document.getElementById(dispId).textContent = fmt(val);
+  applySliderFill(sliderId);
+}
+
+/* ─── Apple-style fill gradient for mobile sliders ─── */
+function applySliderFill(id) {
+  var el  = document.getElementById(id);
+  if (window.innerWidth > 520) { el.style.background = ''; return; }
+  var min = parseFloat(el.min);
+  var max = parseFloat(el.max);
+  var val = parseFloat(el.value);
+  var pct = ((val - min) / (max - min) * 100).toFixed(2);
+  el.style.background =
+    'linear-gradient(to right, #D4603A ' + pct + '%, rgba(14,14,12,0.10) ' + pct + '%)';
+}
+
+/* ─── CRM integration ─── */
+let crmConnected    = false;
+let currentEntityId = null;
+let currentModule   = 'Deals';
+let isWizard        = false;   // true when launched inside a Wizard (no record yet)
+
+/* In a Wizard during record creation there is NO saved record, so values come
+   in through the PageLoad payload rather than getRecord. The payload shape is
+   not strictly documented, so probe the likely nesting spots. Returns the
+   field value (unwrapping {value|name|id} objects) or null. */
+function readWizardField(data, apiName) {
+  if (!data) return null;
+  var spots = [data, data.data, data.record, data.Record, data.EntityData, data.entity, data.values];
+  for (var i = 0; i < spots.length; i++) {
+    var s = spots[i];
+    if (!s || typeof s !== 'object') continue;
+    var v = s[apiName];
+    if (v && typeof v === 'object') v = v.value || v.name || v.id || null;
+    if (v != null && v !== '') return v;
+  }
+  return null;
+}
+
+function setStatus(state, text) {
+  document.getElementById('status-dot').className   = 'status-dot ' + state;
+  document.getElementById('status-text').textContent = text;
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = (isError ? 'error' : '') + ' show';
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function resolveEntityId(data) {
+  if (data.EntityId && typeof data.EntityId === 'string') return data.EntityId;
+  if (Array.isArray(data.EntityId) && data.EntityId.length > 0) return String(data.EntityId[0]);
+  if (data.EntityId && typeof data.EntityId === 'object') {
+    if (data.EntityId.id) return String(data.EntityId.id);
+    if (data.EntityId.ID) return String(data.EntityId.ID);
+    var firstVal = Object.values(data.EntityId)[0];
+    if (firstVal) return String(firstVal);
+  }
+  if (data.recordId) return String(data.recordId);
+  if (data.id) return String(data.id);
+  if (data.ButtonPosition && data.ButtonPosition.EntityId) return String(data.ButtonPosition.EntityId);
+  if (data.meta && data.meta.id) return String(data.meta.id);
+  return null;
+}
+
+if (typeof ZOHO === 'undefined') {
+  console.warn('[Nessteams Widget] ZOHO SDK not available — running in standalone preview mode');
+  setStatus('', 'Manual Mode');
+} else {
+/* PageLoad fires when this widget is opened. This build targets a Wizard during
+   record CREATION: there is no saved record yet, so `resolveEntityId` returns
+   null and the inputs (Deal_Name, Seniority) arrive through the PageLoad
+   payload. The existing-record path (getRecord) is kept as a fallback in case
+   the same widget is ever opened on a saved record. */
+ZOHO.embeddedApp.on('PageLoad', function(data) {
+  console.log('[Nessteams Widget] PageLoad raw data:', JSON.stringify(data, null, 2));
+  try {
+    currentEntityId = resolveEntityId(data);
+    currentModule   = data.Entity || 'Deals';
+    console.log('[Nessteams Widget] Resolved entityId:', currentEntityId, '| module:', currentModule);
+
+    if (!currentEntityId) {
+      // No record id → we are inside a Wizard creating a new record.
+      isWizard     = true;
+      crmConnected = true;   // ZOHO.CRM.WIZARD.post does not need a record id
+      var jobTitle     = readWizardField(data, 'Deal_Name');
+      var seniorityRaw = readWizardField(data, 'Seniority');
+      var tierKey      = SENIORITY_API_MAP[seniorityRaw] || 'mid';
+      console.log('[Nessteams Widget] Wizard mode — title:', jobTitle, '| seniority:', seniorityRaw);
+
+      setActiveTier(tierKey, true);   // apply that tier's default salary range
+      setStatus('connected', 'Connected to Wizard' + (jobTitle ? ' · ' + jobTitle : ''));
+
+      // Auto-look up the typed job title in the cheat sheet once data has loaded
+      if (jobTitle) {
+        setTimeout(function() { csSelectRole(jobTitle); }, 800);
+      }
+      render();
+      return;
+    }
+
+    setStatus('', 'Manual Mode');
+
+    ZOHO.CRM.API.getRecord({ Entity: currentModule, RecordID: currentEntityId })
+      .then(function(response) {
+        if (!response || !response.data || response.data.length === 0) {
+          console.warn('[Nessteams Widget] getRecord returned empty data:', response);
+          setStatus('', 'Manual Mode');
+          render();
+          return;
+        }
+        var record       = response.data[0];
+        var salaryLow    = parseFloat(record['Salary_Low'])  || TIER_DEFAULTS['mid'][0];
+        var salaryHigh   = parseFloat(record['Salary_High']) || TIER_DEFAULTS['mid'][1];
+        var seniorityRaw = record['Seniority'] || 'Mid-level';
+        var tierKey      = SENIORITY_API_MAP[seniorityRaw] || 'mid';
+        var jobRole      = record['Job_Role'] || null;
+
+        setSlider('sl-low',  'num-low',  salaryLow);
+        setSlider('sl-high', 'num-high', salaryHigh);
+        // activate matching button but keep the CRM salary values (applyDefaults = false)
+        setActiveTier(tierKey, false);
+
+        // Auto-select role in cheat sheet once data has loaded (slight delay for csLoad)
+        if (jobRole) {
+          setTimeout(function() { csSelectRole(jobRole); }, 800);
+        }
+
+        crmConnected = true;
+        setStatus('connected', 'Connected to Zoho CRM' + (record['Deal_Name'] ? ' · ' + record['Deal_Name'] : ''));
+        render();
+      })
+      .catch(function(err) {
+        crmConnected = false;
+        setStatus('', 'Manual Mode');
+        console.error('[Nessteams Widget] CRM fetch error:', err);
+        render();
+      });
+  } catch (e) {
+    setStatus('', 'Manual Mode');
+    console.error('[Nessteams Widget] PageLoad exception:', e);
+    render();
+  }
+});
+
+ZOHO.embeddedApp.init();
+} // end ZOHO guard
+
+/* ─── Save to CRM ─── */
+function saveToCRM() {
+  if (!isWizard && (!crmConnected || !currentEntityId)) {
+    showToast('Not connected to a Deal record', true);
+    return;
+  }
+
+  var low  = parseInt(document.getElementById('sl-low').value);
+  var high = parseInt(document.getElementById('sl-high').value);
+  var tier = activeTier;
+
+  var pLow  = calcPrice(low,  tier);
+  var pHigh = calcPrice(high, tier);
+
+  var btn = document.getElementById('btn-save');
+  btn.classList.add('saving');
+  btn.textContent = 'Saving...';
+
+  // Wizard → push the outputs into the in-progress wizard form (no record yet).
+  // Saved record → update the record directly via the CRM API (fallback path).
+  var saver;
+  if (isWizard) {
+    saver = ZOHO.CRM.WIZARD.post({
+      Salary_Low:    low,
+      Salary_High:   high,
+      Seat_Cost_Min: r125(pLow.price),
+      Seat_Cost_Max: r125(pHigh.price),
+    });
+  } else {
+    saver = ZOHO.CRM.API.updateRecord({
+      Entity: currentModule,
+      APIData: {
+        id:                currentEntityId,
+        Salary_Low:        low,
+        Salary_High:       high,
+        Seniority:   TIER_LABEL[tier],
+        Seat_Cost_Min:  r125(pLow.price),
+        Seat_Cost_Max: r125(pHigh.price),
+        Job_Role:          csActiveName || null,
+      },
+      Trigger: [],
+    });
+  }
+
+  try {
+    saver.then(function(response) {
+      btn.classList.remove('saving');
+      btn.classList.add('saved');
+      btn.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="2 8 6 12 14 4"/>
+        </svg>
+        Saved
+      `;
+      showToast(isWizard ? 'Client prices applied to the form' : 'Client prices saved to Deal record');
+      csIncrementCounter();
+      setTimeout(() => {
+        btn.classList.remove('saved');
+        btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2H3a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V5l-3-3z"/>
+            <path d="M11 2v4H5V2M5 9h6M5 12h4"/>
+          </svg>
+          Save to Deal
+        `;
+      }, 3000);
+    }).catch(function(err) {
+      btn.classList.remove('saving');
+      btn.textContent = 'Save to Deal';
+      showToast('Save failed: ' + (err.message || JSON.stringify(err)), true);
+      console.error('[Nessteams Widget] CRM save error:', err);
+    });
+  } catch (e) {
+    btn.classList.remove('saving');
+    btn.textContent = 'Save to Deal';
+    showToast('Save failed: ' + e.message, true);
+    console.error('[Nessteams Widget] saveToCRM exception:', e);
+  }
+}
+
+/* ─── Render UI ─── */
+function render() {
+  var low  = parseInt(document.getElementById('sl-low').value);
+  var high = parseInt(document.getElementById('sl-high').value);
+  marginDollars = parseInt(document.getElementById('sl-margin').value);
+  var tier = activeTier;
+
+  applySliderFill('sl-low');
+  applySliderFill('sl-high');
+  applySliderFill('sl-margin');
+
+  document.getElementById('disp-low').textContent    = fmt(low);
+  document.getElementById('disp-high').textContent   = fmt(high);
+  document.getElementById('disp-margin').textContent = fmt(marginDollars);
+
+  var pLow  = calcPrice(low,  tier);
+  var pHigh = calcPrice(high, tier);
+  var eLow  = effMarginPct(low,  tier);
+  var eHigh = effMarginPct(high, tier);
+
+  function priceCard(label, salary, p, ePct) {
+    var floorPill = p.floored
+      ? '<span class="pill pill-floor" style="margin-left:4px">floor applied</span>'
+      : '';
+    return `
+      <div class="price-card">
+        <div class="price-card-label">${label}</div>
+        <div class="price-card-value">${fmtR(p.price)}</div>
+        <div class="price-formula">= (${fmt(salary)} &times; 1.25) + ${fmt(marginDollars)}</div>
+        <div class="price-meta">
+          <span class="margin-pct">${fmt(p.margin)} <span style="opacity:0.6">(${ePct.toFixed(1)}%)</span></span>
+          ${floorPill}
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('result-col').innerHTML =
+    priceCard('Low End',  low,  pLow,  eLow) +
+    priceCard('High End', high, pHigh, eHigh);
+
+}
+
+document.getElementById('sl-low').addEventListener('input', render);
+document.getElementById('sl-high').addEventListener('input', render);
+document.getElementById('sl-margin').addEventListener('input', render);
+window.addEventListener('resize', function() {
+  applySliderFill('sl-low');
+  applySliderFill('sl-high');
+  applySliderFill('sl-margin');
+});
+
+/* ─── Salary Cheat Sheet functions ─── */
+
+function csLoad() {
+  csSetStatus('Loading salary data…');
+  fetch(CS_API)
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (!res.success) throw new Error(res.error || 'API error');
+      /* ZCQL wraps each row: [{ SalaryCheatSheet: { ROWID, Role, ... } }, ...] */
+      csAllRows = (res.data || []).map(function(r) {
+        return r.SalaryCheatSheet || r;
+      });
+      csSetStatus('');
+      csRenderTopPills();
+    })
+    .catch(function(err) {
+      console.error('[CheatSheet] Load error:', err);
+      csSetStatus('Salary data unavailable');
+    });
+}
+
+/* Returns only the rows whose Seniority matches the currently active tier */
+function csFilteredRows() {
+  var label = TIER_LABEL[activeTier];
+  return csAllRows.filter(function(r) { return r.Seniority === label; });
+}
+
+function csRenderTopPills() {
+  var container = document.getElementById('cs-top-roles');
+  container.innerHTML = '';
+  var filtered = csFilteredRows().slice(0, 5);  // top 5 for this seniority (already Counter DESC)
+  if (!filtered.length) {
+    var msg = document.createElement('span');
+    msg.style.cssText = 'font-size:11px;color:var(--ink-60)';
+    msg.textContent = csAllRows.length
+      ? 'No recorded positions for the selected seniority level'
+      : 'No data yet';
+    container.appendChild(msg);
+    return;
+  }
+  filtered.forEach(function(row) {
+    var btn = document.createElement('button');
+    btn.className = 'cs-role-pill';
+    btn.textContent = row.Role;
+    btn.addEventListener('click', function() { csSelectRole(row.Role); });
+    container.appendChild(btn);
+  });
+}
+
+function csSufficient(row) {
+  if (!row || parseInt(row.Counter) < 3) return false;
+  var sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  return new Date(row.UpdatedDate) >= sixMonthsAgo;
+}
+
+function csSelectRole(roleName) {
+  var row = csAllRows.find(function(r) { return r.Role === roleName; });
+  csActiveRow  = row || null;
+  csActiveName = roleName;
+
+  document.querySelectorAll('.cs-role-pill').forEach(function(p) {
+    p.classList.toggle('active', p.textContent === roleName);
+  });
+  document.getElementById('cs-search').value = '';
+  document.getElementById('cs-dropdown').hidden = true;
+
+  var resultEl  = document.getElementById('cs-result');
+  var warningEl = document.getElementById('cs-warning');
+
+  if (!row) {
+    resultEl.hidden  = true;
+    warningEl.hidden = false;
+    return;
+  }
+
+  if (csSufficient(row)) {
+    document.getElementById('cs-role-name').textContent   = row.Role;
+    document.getElementById('cs-salary-range').textContent =
+      '$' + Number(row.MinSalary).toLocaleString() + ' – $' + Number(row.MaxSalary).toLocaleString() + ' / mo';
+    resultEl.hidden  = false;
+    warningEl.hidden = true;
+  } else {
+    resultEl.hidden  = true;
+    warningEl.hidden = false;
+  }
+}
+
+function csApply() {
+  if (!csActiveRow || !csSufficient(csActiveRow)) return;
+  setSlider('sl-low',  'num-low',  Number(csActiveRow.MinSalary));
+  setSlider('sl-high', 'num-high', Number(csActiveRow.MaxSalary));
+  render();
+}
+
+function csSetStatus(msg) {
+  var el = document.getElementById('cs-status');
+  if (el) el.textContent = msg;
+}
+
+function csHandleSearch(query) {
+  var dropdown = document.getElementById('cs-dropdown');
+  if (!query.trim()) { dropdown.hidden = true; return; }
+  var matches = csFilteredRows().filter(function(r) {
+    return r.Role.toLowerCase().includes(query.toLowerCase());
+  });
+  if (!matches.length) { dropdown.hidden = true; return; }
+  dropdown.innerHTML = '';
+  matches.forEach(function(r) {
+    var item = document.createElement('div');
+    item.className = 'cs-dropdown-item';
+    item.textContent = r.Role;                           // textContent — no XSS
+    item.addEventListener('click', function() { csSelectRole(r.Role); });
+    dropdown.appendChild(item);
+  });
+  dropdown.hidden = false;
+}
+
+function csIncrementCounter() {
+  if (!csActiveRow || !csActiveRow.ROWID) return;
+  fetch(CS_API + '/increment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rowId: csActiveRow.ROWID }),  // server reads counter itself
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      if (res.success) csActiveRow.Counter = res.newCount;
+    })
+    .catch(function(e) { console.warn('[CheatSheet] Counter increment failed:', e); });
+}
+
+/* Resets the cheat sheet UI and re-renders pills for the current tier */
+function csRefresh() {
+  csActiveRow  = null;
+  csActiveName = null;
+  document.getElementById('cs-result').hidden  = true;
+  document.getElementById('cs-warning').hidden = true;
+  document.getElementById('cs-search').value   = '';
+  document.getElementById('cs-dropdown').hidden = true;
+  csRenderTopPills();
+}
+
+/* Cheat sheet event wiring */
+document.getElementById('cs-search').addEventListener('input', function() {
+  csHandleSearch(this.value);
+});
+document.getElementById('cs-apply-btn').addEventListener('click', csApply);
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.cs-search-wrap')) {
+    var dd = document.getElementById('cs-dropdown');
+    if (dd) dd.hidden = true;
+  }
+});
+
+render();
+csLoad();
+</script>
+</body>
+</html>
