@@ -486,6 +486,7 @@
     cursor: pointer;
   }
   .cs-dropdown-item:hover { background: rgba(212,96,58,0.08); color: var(--terra); }
+  .cs-dropdown-new { color: var(--terra); font-weight: 600; }
   .cs-result {
     display: flex;
     align-items: center;
@@ -803,6 +804,7 @@ var csActiveName = null;  // selected role name string
    (see functions/cheatsheet-api/index.js — Access-Control-Allow-Origin: *).
 ─────────────────────────────────────────────────────────────────────────── */
 var CS_API = 'https://pricing-calculator-916648406.development.catalystserverless.com/server/cheatsheet-api';
+var CS_KEY = 'nss-cheatsheet-7Qx3v9Kp2Lr8';  // must match WIDGET_KEY in cheatsheet-api (sent as X-Widget-Key)
 
 /* ─── Seniority button activation ─── */
 function setActiveTier(tier, applyDefaults) {
@@ -1108,7 +1110,7 @@ window.addEventListener('resize', function() {
 
 function csLoad() {
   csSetStatus('Loading salary data…');
-  fetch(CS_API)
+  fetch(CS_API, { headers: { 'X-Widget-Key': CS_KEY } })
     .then(function(r) { return r.json(); })
     .then(function(res) {
       if (!res.success) throw new Error(res.error || 'API error');
@@ -1206,11 +1208,11 @@ function csSetStatus(msg) {
 
 function csHandleSearch(query) {
   var dropdown = document.getElementById('cs-dropdown');
-  if (!query.trim()) { dropdown.hidden = true; return; }
+  var q = query.trim();
+  if (!q) { dropdown.hidden = true; return; }
   var matches = csFilteredRows().filter(function(r) {
-    return r.Role.toLowerCase().includes(query.toLowerCase());
+    return r.Role.toLowerCase().includes(q.toLowerCase());
   });
-  if (!matches.length) { dropdown.hidden = true; return; }
   dropdown.innerHTML = '';
   matches.forEach(function(r) {
     var item = document.createElement('div');
@@ -1219,21 +1221,59 @@ function csHandleSearch(query) {
     item.addEventListener('click', function() { csSelectRole(r.Role); });
     dropdown.appendChild(item);
   });
+  /* Offer to create a brand-new role when the typed name isn't an exact match */
+  var exact = matches.some(function(r) { return r.Role.toLowerCase() === q.toLowerCase(); });
+  if (!exact) {
+    var add = document.createElement('div');
+    add.className = 'cs-dropdown-item cs-dropdown-new';
+    add.textContent = '+ Use new role: "' + q + '"';     // textContent — no XSS
+    add.addEventListener('click', function() { csSetNewRole(q); });
+    dropdown.appendChild(add);
+  }
   dropdown.hidden = false;
 }
 
+/* Selects a typed role that doesn't exist yet — it will be created via /upsert
+   on the next save. No stored range, so the user sets the salary manually. */
+function csSetNewRole(roleName) {
+  csActiveRow  = null;
+  csActiveName = roleName;
+  document.querySelectorAll('.cs-role-pill').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('cs-search').value    = '';
+  document.getElementById('cs-dropdown').hidden  = true;
+  document.getElementById('cs-result').hidden    = true;
+  document.getElementById('cs-warning').hidden   = true;
+  csSetStatus('New role "' + roleName + '" will be added on save — set the salary range.');
+}
+
+/* Records the active role on save via POST /upsert: creates the row if the
+   Role + Seniority pair is new, otherwise bumps its Counter + UpdatedDate.
+   Salary range is sent ONLY for brand-new roles (csActiveRow == null) so a
+   curated range on an existing role isn't overwritten on every save.
+   Refreshes the pills afterwards so a newly created role surfaces. */
 function csIncrementCounter() {
-  if (!csActiveRow || !csActiveRow.ROWID) return;
-  fetch(CS_API + '/increment', {
+  if (!csActiveName) return;   // no role chosen → nothing to record
+  var payload = {
+    Role:      csActiveName,
+    Seniority: TIER_LABEL[activeTier],
+  };
+  if (!csActiveRow) {          // brand-new role → seed its salary range from the sliders
+    payload.MinSalary = parseInt(document.getElementById('sl-low').value);
+    payload.MaxSalary = parseInt(document.getElementById('sl-high').value);
+  }
+  fetch(CS_API + '/upsert', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rowId: csActiveRow.ROWID }),  // server reads counter itself
+    headers: { 'Content-Type': 'application/json', 'X-Widget-Key': CS_KEY },
+    body: JSON.stringify(payload),
   })
     .then(function(r) { return r.json(); })
     .then(function(res) {
-      if (res.success) csActiveRow.Counter = res.newCount;
+      if (res.success) {
+        console.log('[CheatSheet] upsert ' + res.action + ' — count now ' + res.newCount);
+        csLoad();   // refresh pills so a newly created role surfaces
+      }
     })
-    .catch(function(e) { console.warn('[CheatSheet] Counter increment failed:', e); });
+    .catch(function(e) { console.warn('[CheatSheet] upsert failed:', e); });
 }
 
 /* Resets the cheat sheet UI and re-renders pills for the current tier */

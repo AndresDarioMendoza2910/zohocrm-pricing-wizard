@@ -40,8 +40,23 @@ Catalyst URL (required because the widget is served from `*.zappsusercontent.com
 https://pricing-calculator-916648406.development.catalystserverless.com/server/cheatsheet-api
 ```
 
-Currently the **development** environment only. See the main project's
-`HANDOFF.md` for promoting to production.
+**Access key.** The function is hardened with a shared-key gate, so every call
+sends header `X-Widget-Key: <CS_KEY>`. `CS_KEY` is a constant in `widget.html`
+and **must match `WIDGET_KEY`** in
+`../nessteams-pricing-backend/functions/cheatsheet-api/index.js` (current value
+`nss-cheatsheet-7Qx3v9Kp2Lr8`). This is obscurity-level protection — the key is
+visible in page source — not true auth. See
+`../nessteams-pricing-backend/README.md`.
+
+**Writes on save.** The save button calls `POST /upsert` with
+`{ Role, Seniority, MinSalary?, MaxSalary? }` — creating the role if the
+Role + Seniority pair is new (salary seeded from the sliders) or bumping its
+`Counter` if it exists. A typed role with no match shows a "+ Use new role"
+option in the search box; salary is only sent for brand-new roles so existing
+curated ranges aren't overwritten.
+
+Currently the **development** environment only. See `../legacy/HANDOFF.md` for
+promoting to production and `../MEMORY.md` for project context.
 
 ## Build & deploy
 This is a standard Zoho ZET scaffold. From this folder:
