@@ -54,7 +54,15 @@ in page source — not true auth. See `../nessteams-pricing-backend/README.md`.
 Role + Seniority pair is new (salary seeded from the sliders) or bumping its
 `Counter` if it exists. A typed role with no match shows a "+ Use new role"
 option in the search box; salary is only sent for brand-new roles so existing
-curated ranges aren't overwritten.
+curated ranges aren't overwritten. The selected role survives seniority changes
+(`csRefresh` no longer clears `csActiveName`) so the upsert still fires after the
+user adjusts the tier.
+
+**Wizard save quirk.** `ZOHO.CRM.WIZARD.post` applies the form values
+immediately but its returned promise often never resolves. `saveToCRM` therefore
+completes via a 1.5s timeout fallback (`finishOk`, guarded by a `settled` flag) —
+otherwise the button sticks on "Saving…" and the `/upsert` (which runs in the
+completion handler) never fires.
 
 Currently the **development** environment only. See `../legacy/HANDOFF.md` for
 promoting to production and `../MEMORY.md` for project context.
