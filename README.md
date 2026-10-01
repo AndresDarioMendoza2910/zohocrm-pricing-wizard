@@ -25,8 +25,8 @@ A "salary cheat sheet" (Catalyst backend) suggests typical ranges per role.
   `Seat_Cost_Min`, `Seat_Cost_Max`.
 
 ## Pricing formula (do not change without intent)
-- `MULT = 1.25` — cost multiplier (salary + Panama employer taxes/fees).
-- `price = r125(salary * 1.25 + max(marginDollars, TIER_FLOORS[tier]))`
+- `MULT = 1.35` — cost multiplier (salary + Panama employer taxes/fees).
+- `price = r125(salary * 1.35 + max(marginDollars, TIER_FLOORS[tier]))`
 - `r125(v) = Math.ceil(v / 125) * 125` — rounds **up** to nearest 125.
 - `TIER_FLOORS` is currently a **flat 1000** for all tiers (business decision
   2026-06-16); per-tier values are kept in the code for easy reinstatement.
