@@ -731,7 +731,7 @@
 
 <script>
 /* ─── Constants ─── */
-const MULT = 1.25;
+const MULT = 1.35;
 
 const TIER_DEFAULTS = {
   entry:    [800,  1000],
@@ -1095,7 +1095,7 @@ function render() {
       <div class="price-card">
         <div class="price-card-label">${label}</div>
         <div class="price-card-value">${fmtR(p.price)}</div>
-        <div class="price-formula">= (${fmt(salary)} &times; 1.25) + ${fmt(marginDollars)}</div>
+        <div class="price-formula">= (${fmt(salary)} &times; 1.35) + ${fmt(marginDollars)}</div>
         <div class="price-meta">
           <span class="margin-pct">${fmt(p.margin)} <span style="opacity:0.6">(${ePct.toFixed(1)}%)</span></span>
           ${floorPill}
