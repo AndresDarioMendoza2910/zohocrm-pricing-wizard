@@ -1,14 +1,14 @@
-# Nessteams Pricing Wizard
+# Pricing Wizard for Zoho CRM
 
-Zoho CRM widget (Sigma extension) — the **Nessteams Pricing Simulator** adapted
+Zoho CRM widget (Sigma extension) — the **Pricing Simulator for Zoho CRM** adapted
 for the **Job Request creation Wizard** on the Deals module.
 
-This is one of two sibling projects under `Nessteams Pricing Calculator/`:
+This is one of two sibling projects under `Pricing Calculator for Zoho CRM/`:
 
 | Project | Launch context | Reads inputs via | Writes outputs via | Status text |
 |---------|----------------|------------------|--------------------|-------------|
-| **nessteams-pricing-wizard** (this one) | Wizard during record **creation** (no record yet) | `PageLoad` payload (`readWizardField`) | `ZOHO.CRM.WIZARD.post` | "Connected to Wizard" |
-| nessteams-pricing-button | Custom Button on an **existing** Deal | `ZOHO.CRM.API.getRecord` | `ZOHO.CRM.API.updateRecord` | "Connected to Zoho CRM" |
+| **zohocrm-pricing-wizard** (this one) | Wizard during record **creation** (no record yet) | `PageLoad` payload (`readWizardField`) | `ZOHO.CRM.WIZARD.post` | "Connected to Wizard" |
+| zohocrm-pricing-button | Custom Button on an **existing** Deal | `ZOHO.CRM.API.getRecord` | `ZOHO.CRM.API.updateRecord` | "Connected to Zoho CRM" |
 
 > The two `widget.html` files are **identical except** the CRM read/write layer
 > (`isWizard` flag, `readWizardField()`, the `PageLoad` branch, and the
@@ -37,7 +37,7 @@ lookups and usage counts. `CS_API` in `widget.html` points at the **absolute**
 Catalyst URL (required because the widget is served from `*.zappsusercontent.com`):
 
 ```
-https://pricing-calculator-916648406.development.catalystserverless.com/server/cheatsheet-api
+https://YOUR-PROJECT.catalystserverless.com/server/cheatsheet-api
 ```
 
 **Access key.** Writes are gated by a shared key sent **in the request body**
@@ -45,9 +45,9 @@ https://pricing-calculator-916648406.development.catalystserverless.com/server/c
 "simple" and avoids an OPTIONS preflight (Catalyst's gateway doesn't return CORS
 headers on preflights → a header-based key would block the request entirely).
 `CS_KEY` is a constant in `widget.html` and **must match `WIDGET_KEY`** in
-`../nessteams-pricing-backend/functions/cheatsheet-api/index.js` (current value
-`nss-cheatsheet-7Qx3v9Kp2Lr8`). Obscurity-level protection — the key is visible
-in page source — not true auth. See `../nessteams-pricing-backend/README.md`.
+`../zohocrm-pricing-backend/functions/cheatsheet-api/index.js` (current value
+`REPLACE_WITH_YOUR_SHARED_KEY`). Obscurity-level protection — the key is visible
+in page source — not true auth. See `../zohocrm-pricing-backend/README.md`.
 
 **Writes on save.** The save button calls `POST /upsert` with
 `{ Role, Seniority, MinSalary?, MaxSalary? }` — creating the role if the

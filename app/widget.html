@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nessteams · Pricing Simulator</title>
+<title>Pricing Simulator for Zoho CRM</title>
 <link rel="icon" type="image/png" href="favicon.png">
 
 <link href="https://fonts.googleapis.com/css2?family=Yanone+Kaffeesatz:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -628,17 +628,17 @@
 
 <nav>
   <div class="logo-wrap">
-    <!-- N-Mark: on jungle bg → terracotta container, bone vertical strokes, ink diagonal -->
+    <!-- Neutral pricing mark: three ascending bars -->
     <div class="logo-mark">
       <svg width="22" height="22" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-        <line x1="9" y1="28" x2="9" y2="8" stroke="#F4EFE6" stroke-width="5.5" stroke-linecap="round"/>
-        <line x1="9" y1="8" x2="27" y2="28" stroke="#0E0E0C" stroke-width="5.5" stroke-linecap="round"/>
-        <line x1="27" y1="28" x2="27" y2="8" stroke="#F4EFE6" stroke-width="5.5" stroke-linecap="round"/>
+        <rect x="7" y="20" width="6" height="9" rx="1.5" fill="#F4EFE6"/>
+        <rect x="15" y="14" width="6" height="15" rx="1.5" fill="#F4EFE6"/>
+        <rect x="23" y="8" width="6" height="21" rx="1.5" fill="#F4EFE6"/>
       </svg>
     </div>
     <div class="logo-text-wrap">
-      <div class="logo-wordmark">Nessteams</div>
-      <div class="logo-tagline">Pricing Simulator</div>
+      <div class="logo-wordmark">Pricing</div>
+      <div class="logo-tagline">Simulator</div>
     </div>
   </div>
   <button class="btn-save" id="btn-save" onclick="saveToCRM()">
@@ -803,8 +803,8 @@ var csActiveName = null;  // selected role name string
    Catalyst-hosted function. Catalyst function must allow CORS
    (see functions/cheatsheet-api/index.js — Access-Control-Allow-Origin: *).
 ─────────────────────────────────────────────────────────────────────────── */
-var CS_API = 'https://pricing-calculator-916648406.development.catalystserverless.com/server/cheatsheet-api';
-var CS_KEY = 'nss-cheatsheet-7Qx3v9Kp2Lr8';  // must match WIDGET_KEY in cheatsheet-api (sent in the POST body)
+var CS_API = 'https://YOUR-PROJECT.catalystserverless.com/server/cheatsheet-api';
+var CS_KEY = 'REPLACE_WITH_YOUR_SHARED_KEY';  // must match WIDGET_KEY in cheatsheet-api (sent in the POST body)
 
 /* ─── Seniority button activation ─── */
 function setActiveTier(tier, applyDefaults) {
@@ -892,7 +892,7 @@ function resolveEntityId(data) {
 }
 
 if (typeof ZOHO === 'undefined') {
-  console.warn('[Nessteams Widget] ZOHO SDK not available — running in standalone preview mode');
+  console.warn('[Pricing Widget] ZOHO SDK not available — running in standalone preview mode');
   setStatus('', 'Manual Mode');
 } else {
 /* PageLoad fires when this widget is opened. This build targets a Wizard during
@@ -901,11 +901,11 @@ if (typeof ZOHO === 'undefined') {
    payload. The existing-record path (getRecord) is kept as a fallback in case
    the same widget is ever opened on a saved record. */
 ZOHO.embeddedApp.on('PageLoad', function(data) {
-  console.log('[Nessteams Widget] PageLoad raw data:', JSON.stringify(data, null, 2));
+  console.log('[Pricing Widget] PageLoad raw data:', JSON.stringify(data, null, 2));
   try {
     currentEntityId = resolveEntityId(data);
     currentModule   = data.Entity || 'Deals';
-    console.log('[Nessteams Widget] Resolved entityId:', currentEntityId, '| module:', currentModule);
+    console.log('[Pricing Widget] Resolved entityId:', currentEntityId, '| module:', currentModule);
 
     if (!currentEntityId) {
       // No record id → we are inside a Wizard creating a new record.
@@ -914,7 +914,7 @@ ZOHO.embeddedApp.on('PageLoad', function(data) {
       var jobTitle     = readWizardField(data, 'Deal_Name');
       var seniorityRaw = readWizardField(data, 'Seniority');
       var tierKey      = SENIORITY_API_MAP[seniorityRaw] || 'mid';
-      console.log('[Nessteams Widget] Wizard mode — title:', jobTitle, '| seniority:', seniorityRaw);
+      console.log('[Pricing Widget] Wizard mode — title:', jobTitle, '| seniority:', seniorityRaw);
 
       setActiveTier(tierKey, true);   // apply that tier's default salary range
       setStatus('connected', 'Connected to Wizard' + (jobTitle ? ' · ' + jobTitle : ''));
@@ -932,7 +932,7 @@ ZOHO.embeddedApp.on('PageLoad', function(data) {
     ZOHO.CRM.API.getRecord({ Entity: currentModule, RecordID: currentEntityId })
       .then(function(response) {
         if (!response || !response.data || response.data.length === 0) {
-          console.warn('[Nessteams Widget] getRecord returned empty data:', response);
+          console.warn('[Pricing Widget] getRecord returned empty data:', response);
           setStatus('', 'Manual Mode');
           render();
           return;
@@ -961,12 +961,12 @@ ZOHO.embeddedApp.on('PageLoad', function(data) {
       .catch(function(err) {
         crmConnected = false;
         setStatus('', 'Manual Mode');
-        console.error('[Nessteams Widget] CRM fetch error:', err);
+        console.error('[Pricing Widget] CRM fetch error:', err);
         render();
       });
   } catch (e) {
     setStatus('', 'Manual Mode');
-    console.error('[Nessteams Widget] PageLoad exception:', e);
+    console.error('[Pricing Widget] PageLoad exception:', e);
     render();
   }
 });
@@ -1028,7 +1028,7 @@ function saveToCRM() {
     btn.classList.remove('saving');
     btn.textContent = 'Save to Deal';
     showToast('Save failed: ' + ((err && err.message) || JSON.stringify(err)), true);
-    console.error('[Nessteams Widget] CRM save error:', err);
+    console.error('[Pricing Widget] CRM save error:', err);
   }
 
   // Wizard → push the outputs into the in-progress wizard form (no record yet).
